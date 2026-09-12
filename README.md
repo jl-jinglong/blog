@@ -1,39 +1,43 @@
-# Chirpy Starter
+# 敬龙的研究笔记
 
-[![Gem Version](https://img.shields.io/gem/v/jekyll-theme-chirpy)][gem]&nbsp;
-[![GitHub license](https://img.shields.io/github/license/cotes2020/chirpy-starter.svg?color=blue)][mit]
+这是一个基于 [Chirpy](https://github.com/cotes2020/jekyll-theme-chirpy) 的中文研究博客，部署地址为：
 
-A minimal, ready-to-use template for creating a blog with the [**Chirpy**][chirpy] Jekyll theme. Get up and running in minutes with all critical files pre-configured.
+`https://jl-jinglong.github.io/blog/`
 
-## Why This Starter Exists
+## 写文章
 
-When installing Chirpy through [RubyGems.org][gem], Jekyll can only read a subset of theme files (`_data`, `_layouts`, `_includes`, `_sass`, `assets`) and limited `_config.yml` options from the gem. As a result, users cannot enjoy the full out-of-the-box experience that Chirpy offers.
+在 `_posts/` 下新建 Markdown 文件，文件名使用：
 
-To unlock all features, the following files must be present in your Jekyll site:
+`YYYY-MM-DD-title.md`
 
-```shell
-.
-├── _config.yml
-├── _plugins
-├── _tabs
-└── index.html
+示例：
+
+```markdown
+---
+title: "文章标题"
+date: 2026-09-12 20:00:00 +0800
+categories: [研究笔记]
+tags: [AI, 机器学习]
+---
+
+正文写在这里。
 ```
 
-This starter bundles those files from the latest **Chirpy** release along with a [CD][CD] workflow, so you can start writing immediately.
+## 本地预览
 
-## Usage
+安装 Ruby 与 Bundler 后运行：
 
-Check out the [theme's docs](https://github.com/cotes2020/jekyll-theme-chirpy/wiki).
+```bash
+bundle install
+bundle exec jekyll serve
+```
 
-## Contributing
+然后访问 `http://127.0.0.1:4000/blog/`。
 
-This repository is automatically updated with new releases from the theme repository. If you encounter any issues or want to contribute to its improvement, please visit the [theme repository][chirpy] to provide feedback.
+## 发布
 
-## License
+将本目录推送到 GitHub 的 `jl-jinglong/blog` 仓库，并在仓库 Settings → Pages 中把发布来源设为 **GitHub Actions**。工作流位于 `.github/workflows/pages-deploy.yml`。
 
-This work is published under [MIT][mit] License.
+## 公开资料
 
-[gem]: https://rubygems.org/gems/jekyll-theme-chirpy
-[chirpy]: https://github.com/cotes2020/jekyll-theme-chirpy/
-[CD]: https://en.wikipedia.org/wiki/Continuous_deployment
-[mit]: https://github.com/cotes2020/chirpy-starter/blob/master/LICENSE
+站点只配置了姓名、学校与专业概况、研究方向、GitHub 和邮箱，没有放入简历中的手机号、成绩排名或完整科研经历。
