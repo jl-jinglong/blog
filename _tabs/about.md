@@ -17,3 +17,4 @@ order: 4
 
 - [GitHub](https://github.com/jl-jinglong)
 - [邮箱](mailto:2023117285@stumail.nwu.edu.cn)
+- 微信：敬龙（请通过邮箱联系）
