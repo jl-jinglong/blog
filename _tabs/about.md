@@ -1,6 +1,7 @@
 ---
 # the default layout is 'page'
 title: 关于
+published: false
 icon: fas fa-info-circle
 order: 4
 ---
