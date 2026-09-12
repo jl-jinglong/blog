@@ -158,6 +158,7 @@ pwa:
 paginate: 10
 
 # The base URL of your site
+# This repository is deployed as a GitHub Pages project site.
 baseurl: "/blog"
 
 # ------------ The following options are not recommended to be modified ------------------
