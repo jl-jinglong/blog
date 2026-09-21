@@ -1,21 +1,23 @@
 ---
-title: "大模型中的位置编码：从绝对位置到 M-RoPE"
+title: "大模型中的位置编码：从绝对位置到 RoPE"
 date: 2026-09-18 00:00:00 +0800
-categories: [研究笔记]
-tags: [Transformer, LLM, Positional-Encoding, RoPE, M-RoPE]
+categories: [大模型基础]
+tags: [Transformer, LLM, Positional-Encoding, RoPE]
 math: true
 toc: true
 ---
 
-Transformer 可以借助自注意力机制，让任意两个 token 直接交互；但它本身既没有 RNN 按时间步递推的结构，也没有 CNN 局部滑动的结构。因此，若不额外提供顺序，`我 喜欢 你` 与 `你 喜欢 我` 对 Transformer 来说只是同一组 token 的不同排列，模型并不知道谁在前、谁在后。
+近两年来，长上下文成为了 LLM 里备受关注的问题。表面上看，这是“上下文窗口”从 2K、4K 扩到 32K、128K 甚至 1M 的问题。但其中还有一个更底层的影响：即使模型能接收 100K 个 token，它真的知道第 1 个 token 和第 100K 个 token 之间隔了多远吗？它能把顺序和距离正确建模吗？
 
-**位置编码（Positional Encoding, PE）**的任务，就是把“第几个 token”“两个 token 相隔多远”“图像 patch 位于哪里”等位置信息交给模型。它经历了从绝对位置编码，到相对位置编码，再到为长上下文和多模态服务的 RoPE、M-RoPE 的演进。
+这个问题的关键在于Self-attention 本身是位置无关的：它只根据 token 内容计算注意力，如果不额外注入位置信息，把输入顺序打乱，模型看到的几乎是同一堆 token。因此，Transformer 必须依赖**位置编码（Positional Encoding, PE）**来理解“谁在前、谁在后、相隔多远”。
 
-本文按下面这条线索整理：
+当上下文很短时，位置编码的范围压力不大；但当上下文从 4K 拉到 128K，位置编码就要面对**训练分布外**的位置、距离衰减、外推失败等问题。于是，长上下文研究绕不开位置编码，本文按照时间顺序整理了常见的几种位置编码方法，涵盖了**Sinusoidal Absolute Positional Encoding**，**Relative Position**，**attention bias**，**ALiBi**，**RoPE** 以及 **M-RoPE**。
+
+<!-- 本文按下面这条线索整理：
 
 $$
 \text{绝对位置} \longrightarrow \text{相对位置} \longrightarrow \text{ALiBi / RoPE} \longrightarrow \text{M-RoPE}
-$$
+$$ -->
 
 > 本文默认序列位置从 $0$ 开始编号；不同论文可能从 $1$ 开始，这只会让公式整体平移，不改变核心结论。
 
@@ -58,21 +60,23 @@ $$
 =P\operatorname{Attention}(Q,K,V).
 $$
 
-也就是说，**自注意力对输入排列是置换等变（permutation equivariant）的**：输入行怎样重排，输出行也只是相同地重排。它会判断 token 内容是否相关，却没有任何依据判断“它原本在第几个位置”。
+也就是说，**自注意力对输入排列是置换等变的**：输入行怎样重排，输出行也只是相同地重排。它会判断 token 内容是否相关，却没有任何依据判断“它原本在第几个位置”。
 
-位置编码就是用来打破这条对称性的。
+位置编码就是用来加入位置信息的。
 
-### 0.1 记号约定
+### 0.1 符号定义
 
-| 记号 | 含义 |
+| 符号 | 含义 |
 | --- | --- |
 | $L$ | 当前序列长度 |
-| $i,j$ | token 的位置下标，$0\le i,j<L$ |
+| $(i,j)$ | token 的位置下标，$0\le i,j<L$ |
+| $pos$ | token 的绝对位置 |
 | $x_i\in\mathbb{R}^{d_{\text{model}}}$ | 第 $i$ 个 token 的词向量 / hidden state |
 | $p_i$ | 位置 $i$ 的绝对位置向量 |
-| $r_{i-j}$ | 位置差 $i-j$ 对应的相对位置表示 |
+| $R_{i-j}$ | 位置差 $i-j$ 对应的相对位置表示 |
 | $q_i,k_i,v_i$ | 位置 $i$ 在某个注意力头中的 query、key、value |
 | $d_h$ | 单个注意力头的维度，通常 $d_h=d_{\text{model}}/\text{num\_heads}$ |
+| $d_z$ | 相对位置表示中 query/key 投影后的维度 |
 | $s_{ij}$ | token $i$ 对 token $j$ 的 softmax 前注意力分数（logit） |
 
 ## 1. 绝对位置编码
@@ -91,22 +95,22 @@ $$
 
 $$
 \begin{aligned}
-p_{i,2k} &= \sin\left(\frac{i}{B^{2k/d_{\text{model}}}}\right),\\
-p_{i,2k+1} &= \cos\left(\frac{i}{B^{2k/d_{\text{model}}}}\right),
+PE_{(pos,2i)} &= \sin\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right),\\
+PE_{(pos,2i+1)} &= \cos\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right),
 \end{aligned}
 \qquad
-k=0,1,\ldots,\frac{d_{\text{model}}}{2}-1.
+i=0,1,\ldots,\frac{d_{\text{model}}}{2}-1.
 $$
 
-原论文取 $B=10000$。$2k$ 与 $2k+1$ 是一对相邻维度：偶数维使用 $\sin$，奇数维使用 $\cos$。因此每个位置由多组、不同频率的圆周坐标共同描述。
+原论文取 $B=10000$。$2i$ 与 $2i+1$ 是一对相邻维度：偶数维使用 $\sin$，奇数维使用 $\cos$。因此每个位置由多组、不同频率的圆周坐标共同描述。
 
-令第 $k$ 对维度的角频率为：
+令第 $i$ 对维度的角频率为：
 
 $$
-\omega_k=B^{-2k/d_{\text{model}}},
+\omega_i=10000^{-2i/d_{\text{model}}},
 $$
 
-那么该二维位置子向量可写成 $[\sin(i\omega_k),\cos(i\omega_k)]$。$k$ 较小时频率高、变化快，适合区分近邻位置；$k$ 较大时频率低、变化慢，提供更长尺度的位置变化。
+那么该二维位置子向量可写成 $[\sin(pos\omega_i),\cos(pos\omega_i)]$。$i$ 较小时频率高、变化快，适合区分近邻位置；$i$ 较大时频率低、变化慢，提供更长尺度的位置变化。
 
 #### 一个小例子
 
@@ -184,29 +188,31 @@ $$
 
 #### Shaw et al.：给 Key 和 Value 加相对位置向量
 
-一种经典做法是为每个相对距离 $r=i-j$ 准备两组可学习向量 $a_r^K$、$a_r^V$。注意力分数和聚合结果变为：
+一种经典做法是为每个相对距离 $r=j-i$ 准备两组可学习向量 $a_{ij}^K$、$a_{ij}^V$。注意力分数和聚合结果变为：
 
 $$
-s_{ij}=\frac{q_i^\top(k_j+a_{i-j}^K)}{\sqrt{d_h}},
+e_{ij}=\frac{(x_iW^Q)(x_jW^K+a_{ij}^K)^\top}{\sqrt{d_z}},
 $$
 
 $$
-\alpha_{ij}=\operatorname{Softmax}_j(s_{ij}),
+\alpha_{ij}=\frac{\exp(e_{ij})}{\sum_{l=1}^{L}\exp(e_{il})},
 \qquad
-z_i=\sum_j\alpha_{ij}(v_j+a_{i-j}^V).
+z_i=\sum_j\alpha_{ij}(x_jW^V+a_{ij}^V).
 $$
 
 其中 $\alpha_{ij}$ 是位置 $i$ 对 $j$ 的注意力权重。展开第一式可见额外项：
 
 $$
-s_{ij}=\frac{q_i^\top k_j}{\sqrt{d_h}}
-+\frac{q_i^\top a_{i-j}^K}{\sqrt{d_h}}.
+e_{ij}=\frac{(x_iW^Q)(x_jW^K)^\top}{\sqrt{d_z}}
++\frac{(x_iW^Q)(a_{ij}^K)^\top}{\sqrt{d_z}}.
 $$
 
 第二项使 query 可以根据相对距离，偏好或抑制不同的 key。实际实现中常把距离裁剪到 $[-K,K]$：
 
 $$
-\operatorname{clip}(i-j,-K,K).
+a_{ij}^K=w^K_{\operatorname{clip}(j-i,-K,K)},
+\qquad
+a_{ij}^V=w^V_{\operatorname{clip}(j-i,-K,K)}.
 $$
 
 这意味着“距离大于 $K$”的 token 共用一类表示，避免位置表无限增长。
@@ -221,10 +227,10 @@ Transformer-XL 将相对位置注意力写得更细。略去缩放系数后，�
 
 $$
 \begin{aligned}
-s_{ij}={}&q_i^\top k_j
-+q_i^\top W_{K,R}r_{i-j}\\
+A_{ij}^{\mathrm{rel}}={}&q_i^\top k_j
++q_i^\top W_{k,R}R_{i-j}\\
 &+u^\top k_j
-+v^\top W_{K,R}r_{i-j}.
++v^\top W_{k,R}R_{i-j}.
 \end{aligned}
 $$
 
@@ -248,13 +254,16 @@ $$
 ALiBi 不再学习一张位置向量表，而是直接在 attention logit 上减去一个与距离成正比的惩罚。对于因果语言模型，token $i$ 只能看 $j\le i$，定义距离 $d=i-j\ge0$，则：
 
 $$
-s_{ij}=\frac{q_i^\top k_j}{\sqrt{d_h}}-m_h(i-j),
-\qquad j\le i.
+\operatorname{softmax}\left(
+\frac{\mathbf{q}_i\mathbf{K}^{\top}}{\sqrt{d_k}}
++m\left[-(i-1),\ldots,-2,-1,0\right]
+\right),
+\qquad 1\le i\le L.
 $$
 
-$m_h>0$ 是第 $h$ 个注意力头的斜率。距离越远，减去的值越大，注意力权重通常越小。不同头采用不同大小的斜率：有的头更关注近邻，有的头可以更容易看向远处。实现中这些斜率通常按几何级数生成，而不是依赖训练得到的位置 embedding。
+$m>0$ 是第 $h$ 个注意力头的斜率。距离越远，减去的值越大，注意力权重通常越小。不同头采用不同大小的斜率：有的头更关注近邻，有的头可以更容易看向远处。实现中这些斜率通常按几何级数生成，而不是依赖训练得到的位置 embedding。
 
-例如某个头取 $m_h=0.25$，当 query 位于 $i=10$ 时：
+例如某个头取 $m=0.25$，当 query 位于 $i=10$ 时：
 
 $$
 \begin{aligned}
@@ -295,54 +304,54 @@ R(\phi)
 \begin{bmatrix}a\\b\end{bmatrix}.
 $$
 
-设单头维度 $d_h$ 为偶数，第 $k$ 个二维平面的频率为：
+设单头维度 $d_h$ 为偶数，第 $i$ 个二维平面的频率为：
 
 $$
-\theta_k=B^{-2k/d_h},
-\qquad k=0,1,\ldots,\frac{d_h}{2}-1,
+\theta_i=10000^{-2(i-1)/d_h},
+\qquad i=1,2,\ldots,\frac{d_h}{2},
 $$
 
-通常 $B=10000$。位置 $i$ 在这个平面中的旋转角就是 $i\theta_k$。将所有二维旋转拼成一个块对角矩阵，记为 $R_i$：
+通常 $B=10000$。位置 $m$ 在这个平面中的旋转角就是 $m\theta_i$。将所有二维旋转拼成一个块对角矩阵，记为 $R_{\Theta,m}^{d_h}$：
 
 $$
-R_i=\operatorname{diag}\bigl(R(i\theta_0),R(i\theta_1),\ldots,R(i\theta_{d_h/2-1})\bigr).
+R_{\Theta,m}^{d_h}=\operatorname{diag}\bigl(R(m\theta_1),R(m\theta_2),\ldots,R(m\theta_{d_h/2})\bigr).
 $$
 
 RoPE 只对 query 和 key 应用旋转：
 
 $$
-\widetilde q_i=R_iq_i,
+\widetilde q_m=R_{\Theta,m}^{d_h}q_m,
 \qquad
-\widetilde k_j=R_jk_j,
+\widetilde k_n=R_{\Theta,n}^{d_h}k_n,
 $$
 
 $$
-s_{ij}=\frac{\widetilde q_i^\top\widetilde k_j}{\sqrt{d_h}}.
+s_{mn}=\frac{\widetilde q_m^\top\widetilde k_n}{\sqrt{d_h}}.
 $$
 
-value $v_j$ 一般不做旋转，最终仍是 $z_i=\sum_j\alpha_{ij}v_j$。
+value $v_n$ 一般不做旋转，最终仍是 $z_m=\sum_n\alpha_{mn}v_n$。
 
 #### 2.3.2 为什么旋转后自然得到相对位置？
 
-旋转矩阵满足 $R_i^\top R_j=R_{j-i}$，因此：
+旋转矩阵满足 $(R_{\Theta,m}^{d_h})^\top R_{\Theta,n}^{d_h}=R_{\Theta,n-m}^{d_h}$，因此：
 
 $$
-\widetilde q_i^\top\widetilde k_j
-=q_i^\top R_i^\top R_jk_j
-=q_i^\top R_{j-i}k_j.
+\widetilde q_m^\top\widetilde k_n
+=q_m^\top (R_{\Theta,m}^{d_h})^\top R_{\Theta,n}^{d_h}k_n
+=q_m^\top R_{\Theta,n-m}^{d_h}k_n.
 $$
 
-位置 $i$ 和 $j$ 不再分别以“两个绝对位置”出现，而是通过 $j-i$ 这个相对距离影响内积。这是 RoPE 的关键：**它在 QK 内积中以乘性方式注入相对位置，同时保留 token 内容向量。**
+位置 $m$ 和 $n$ 不再分别以“两个绝对位置”出现，而是通过 $n-m$ 这个相对距离影响内积。这是 RoPE 的关键：**它在 QK 内积中以乘性方式注入相对位置，同时保留 token 内容向量。**
 
-也可以把第 $k$ 个二维平面写成复数。若 $q_{i,2k}+\mathrm{i}q_{i,2k+1}$ 是 query 的一对分量，则 RoPE 相当于：
+也可以把第 $i$ 个二维平面写成复数。若 $q_{m,2i}+\mathrm{i}q_{m,2i+1}$ 是 query 的一对分量，则 RoPE 相当于：
 
 $$
-\bigl(q_{i,2k}+\mathrm{i}q_{i,2k+1}\bigr)
+\bigl(q_{m,2i}+\mathrm{i}q_{m,2i+1}\bigr)
 \mapsto
-\bigl(q_{i,2k}+\mathrm{i}q_{i,2k+1}\bigr)e^{\mathrm{i}i\theta_k}.
+\bigl(q_{m,2i}+\mathrm{i}q_{m,2i+1}\bigr)e^{\mathrm{i}m\theta_i}.
 $$
 
-乘上 $e^{\mathrm{i}i\theta_k}$ 就是旋转 $i\theta_k$；两个位置做内积时，相位之差自然只剩 $(j-i)\theta_k$。
+乘上 $e^{\mathrm{i}m\theta_i}$ 就是旋转 $m\theta_i$；两个位置做内积时，相位之差自然只剩 $(n-m)\theta_i$。
 
 #### 2.3.3 一个二维数值例子
 
@@ -403,7 +412,7 @@ def apply_rope(x, cos, sin):
 3. 没有长度为 $L_{\max}$ 的可学习位置表，参数开销很小。
 4. 可直接用于自回归 KV cache：缓存的 key 已经带有其所在位置的旋转。
 
-**挑战**：旋转角 $i\theta_k$ 会随位置增长。若模型仅在较短序列上训练，直接把位置编号推到很大时，远距离的相位模式可能落到训练中未见过的区域，性能会下降。因而 RoPE 虽具备形式上的长度外推能力，但长上下文通常仍需要专门训练或缩放策略。
+**挑战**：旋转角 $m\theta_i$ 会随位置增长。若模型仅在较短序列上训练，直接把位置编号推到很大时，远距离的相位模式可能落到训练中未见过的区域，性能会下降。因而 RoPE 虽具备形式上的长度外推能力，但长上下文通常仍需要专门训练或缩放策略。
 
 常见的扩窗思路包括：
 
@@ -421,9 +430,9 @@ def apply_rope(x, cos, sin):
 
 | 方法 | 注入位置的位置 | 核心形式 | 长度外推直觉 | 典型特点 |
 | --- | --- | --- | --- | --- |
-| Relative Position | QK 分数和/或 V 聚合 | $a_{i-j}^K,a_{i-j}^V$ | 依赖裁剪、bucket 或训练设计 | 直接、表达力强，但实现与计算更复杂 |
-| ALiBi | QK 的 logit | $-m_h(i-j)$ | 线性公式可直接延长 | 极轻量，偏好近邻，表达形式较简单 |
-| RoPE | Q 和 K | $R_iq_i,R_jk_j$ | 可算到任意位置，但长窗常需缩放 | 相位差编码相对距离，现代 LLM 的常用选择 |
+| Relative Position | QK 分数和/或 V 聚合 | $a_{ij}^K,a_{ij}^V$ | 依赖裁剪、bucket 或训练设计 | 直接、表达力强，但实现与计算更复杂 |
+| ALiBi | QK 的 logit | $-m(i-j)$ | 线性公式可直接延长 | 极轻量，偏好近邻，表达形式较简单 |
+| RoPE | Q 和 K | $R_{\Theta,i}^{d_h}q_i,R_{\Theta,j}^{d_h}k_j$ | 可算到任意位置，但长窗常需缩放 | 相位差编码相对距离，现代 LLM 的常用选择 |
 
 ## 3. M-RoPE：面向多模态的旋转位置编码
 
@@ -491,32 +500,7 @@ $$
 
 **代表**：Qwen2-VL 提出了 M-RoPE，用它统一建模文本的一维顺序、图像的二维空间与视频的三维时空位置；后续 Qwen-VL 系列也沿用这一思路。
 
-## 4. 如何建立自己的理解框架？
-
-学习各种位置编码时，可以反复问四个问题：
-
-1. **位置是什么？** 是绝对下标 $i$，相对距离 $i-j$，还是 $(t,h,w)$ 这样的多维坐标？
-2. **位置注入到哪里？** 是输入 $x_i$，注意力 logit $s_{ij}$，还是 Q/K 的几何变换？
-3. **模型能直接获得什么关系？** 是“第 128 个 token”，还是“向左 3 个 token”，还是“同一行右边 1 格”？
-4. **长度和模态变化时会怎样？** 是否受 $L_{\max}$ 限制？能否外推？是否保留图像/视频的空间结构？
-
-用这四个问题回看全文，可以得到一条清晰主线：
-
-$$
-\begin{array}{c}
-\text{绝对位置编码：告诉模型“我在第几位”}\\
-\Downarrow\\
-\text{相对位置编码：告诉模型“你离我多远、在哪个方向”}\\
-\Downarrow\\
-\text{RoPE：把相对距离写入 QK 内积的相位差}\\
-\Downarrow\\
-\text{M-RoPE：把一维相位差扩展到时间、高度、宽度}
-\end{array}
-$$
-
-## 5. 进一步阅读
-
-### 原始论文
+## 4. 原始论文
 
 1. Vaswani et al. [Attention Is All You Need](https://arxiv.org/abs/1706.03762), 2017.
 2. Shaw, Uszkoreit and Vaswani. [Self-Attention with Relative Position Representations](https://aclanthology.org/N18-2074/), 2018.
@@ -525,11 +509,9 @@ $$
 5. Su et al. [RoFormer: Enhanced Transformer with Rotary Position Embedding](https://arxiv.org/abs/2104.09864), 2021.
 6. Wang et al. [Qwen2-VL: Enhancing Vision-Language Model's Perception of the World at Any Resolution](https://arxiv.org/abs/2409.12191), 2024.
 
-### 本次学习材料
+### 学习材料
 
 1. [Bilibili 视频 1](https://www.bilibili.com/video/BV113Kp6RECF/)
 2. [Bilibili 视频 2](https://www.bilibili.com/video/BV1aLCsBhE7i/)
 3. [Bilibili 视频 3](https://www.bilibili.com/video/BV1FjrCBdESo/)
 4. [知乎：大模型的位置编码](https://zhuanlan.zhihu.com/p/650469278)
-
-> 建议下一步用一个极小的 $d_h=4$ 示例，手算一次普通 attention、ALiBi attention 与 RoPE attention 的 $s_{ij}$。能亲手看到“加 bias”和“旋转 Q/K”分别改变了哪里，位置编码就不再只是一组公式了。
