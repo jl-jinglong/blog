@@ -58,13 +58,18 @@ article > header > .post-desc {
   height: auto;
 }
 
-#post-list .card-title,
-#post-list .card-text.content p {
+#post-list .card .card-body .card-title,
+#post-list .card .card-body .card-text.content p {
   display: block;
-  overflow: visible;
+  overflow: visible !important;
   text-overflow: clip;
-  -webkit-line-clamp: unset;
-  -webkit-box-orient: initial;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: initial !important;
+}
+
+#post-list .card .card-body .card-text.content p {
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 /* Keep the cover image for home cards and social previews, not at the article start. */
