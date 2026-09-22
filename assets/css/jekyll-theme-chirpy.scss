@@ -27,4 +27,47 @@ article > header > .post-desc {
   #post-list .post-preview.flex-md-row-reverse {
     flex-direction: row !important;
   }
+
+  #post-list .post-preview > .col-md-5 {
+    flex: 0 0 38%;
+    max-width: 38%;
+  }
+
+  #post-list .post-preview > .col-md-7 {
+    flex: 1 1 0;
+    width: auto;
+    max-width: none;
+  }
+}
+
+/* Show the complete cover and let the short card copy use its natural height. */
+#post-list .preview-img {
+  aspect-ratio: auto;
+  height: auto;
+  overflow: visible;
+}
+
+#post-list .preview-img img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+#post-list .card-body {
+  height: auto;
+}
+
+#post-list .card-title,
+#post-list .card-text.content p {
+  display: block;
+  overflow: visible;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: initial;
+}
+
+/* Keep the cover image for home cards and social previews, not at the article start. */
+article > header .post-meta > .mt-3.mb-3 {
+  display: none;
 }
