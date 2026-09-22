@@ -16,3 +16,8 @@
 article > header .post-meta > .d-flex > span:first-child {
   display: none;
 }
+
+/* Keep the article description for home-page cards and metadata, not the post body. */
+article > header > .post-desc {
+  display: none;
+}
