@@ -45,6 +45,9 @@ jobs:
           ruby-version: 3.4
           bundler-cache: true
 
+      - name: Prepare note post
+        run: cp -- "notes/位置编码.md" "_posts/2026-09-18-positional-encoding.md"
+
       - name: Build site
         run: bundle exec jekyll b -d "_site${{ steps.pages.outputs.base_path }}"
         env:
