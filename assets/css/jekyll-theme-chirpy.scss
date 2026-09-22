@@ -21,3 +21,10 @@ article > header .post-meta > .d-flex > span:first-child {
 article > header > .post-desc {
   display: none;
 }
+
+/* Keep image-cover cards in the requested left-image, right-summary order. */
+@media (min-width: 768px) {
+  #post-list .post-preview.flex-md-row-reverse {
+    flex-direction: row !important;
+  }
+}
