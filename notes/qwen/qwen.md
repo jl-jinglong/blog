@@ -7,15 +7,27 @@ categories: [大模型基础]
 tags: [Qwen, LLM, RLHF, PPO, DPO, GRPO, MoE]
 math: true
 toc: true
+image:
+  path: /assets/img/qwen/qwen-cover.webp
+  alt: "Qwen3 文本模型的后训练与蒸馏流程"
 ---
 
-# Qwen 文本模型：从 Qwen-1 到 Qwen3 的架构与后训练演进
+<div class="qwen-note" markdown="1">
 
 本文以 Qwen 文本模型为对象，对比 Qwen-1、Qwen1.5、Qwen2、Qwen2.5 与 Qwen3 的设计演进，重点分析各代在模型架构、预训练数据、后训练策略与推理能力上的改进与取舍。
 
 > 本文主要讨论公开技术报告较完整的 Qwen、Qwen1.5、Qwen2、Qwen2.5 和 Qwen3。后续的 Qwen3.5、Qwen3.6、Qwen3.8 只简单提及。
 
 ## 1. 速看版总结
+
+> **先抓住这条演进主线**
+>
+> - **[Qwen-1](#2-qwen-1)**：<span class="qwen-term">RoPE / RMSNorm / SwiGLU</span> 建立主干，<span class="qwen-change">QKV bias</span> 改善外推，<span class="qwen-data">SFT → PPO</span> 完成对齐。
+> - **[Qwen1.5](#3-qwen-15)**：扩大尺寸和上下文，在大模型上尝试 <span class="qwen-term">GQA</span>，引入 <span class="qwen-term">MoE</span>。
+> - **[Qwen2](#4-qwen-2)**：全尺寸 <span class="qwen-term">GQA</span>，<span class="qwen-term">DCA + YaRN</span> 扩展上下文，离线与在线 <span class="qwen-data">DPO</span> 优化偏好。
+> - **[Qwen2.5](#5-qwen-25)**：重点在数据与后训练，<span class="qwen-data">18T token、百万级 SFT、DPO + GRPO</span>。
+> - **[Qwen3](#6-qwen3)**：<span class="qwen-change">移除 QKV bias、加入 QK-Norm</span>，融合思考与非思考模式，并通过 <span class="qwen-data">Strong-to-Weak Distillation</span> 训练轻量模型。
+{: .qwen-summary }
 
 ### 1.1 模型列表
 
@@ -117,9 +129,9 @@ Qwen-1 遵循“多数线性层不使用 bias”的趋势，但**保留了注意
 
 在实际中真正影响部署的通常是：
 
-1. **hidden size 和层数**决定主干计算量；
-2. **Q/KV heads 比例**决定 KV cache 大小；
-3. **总参数和激活参数的差异**决定 MoE 的存储成本与单 token 计算成本。
+1. **<span class="qwen-term">hidden size 和层数</span>**决定主干计算量；
+2. **<span class="qwen-term">Q/KV heads 比例</span>**决定 KV cache 大小；
+3. **<span class="qwen-change">总参数和激活参数的差异</span>**决定 MoE 的存储成本与单 token 计算成本。
 
 ## 2. Qwen-1
 
@@ -129,10 +141,10 @@ Qwen-1 的公开权重最早在 2023 年发布，技术报告覆盖 Qwen、Qwen-
 
 Qwen-1 采用了 LLaMA 的模型架构，主要设计在于：
 
-- **位置编码**：**RoPE**，在实现中使用 FP32 保存，以优先考虑模型性能；
-- **QKV bias**：只在 Q、K、V 投影保留 bias，改善长度外推；
-- **FFN 降维**：SwiGLU 的表达力更强，但会增加中间层参数，所以把 FFN 中间维度从 $4d$ 减小至 $8d/3$；
-- **不共享输入输出 embedding**：输入 embedding 与输出投影不共享权重。
+- **位置编码**：[RoPE]({{ '/posts/positional-encoding/' | relative_url }})，在实现中使用 FP32 保存，以优先考虑模型性能；
+- **<span class="qwen-change">QKV bias</span>**：只在 Q、K、V 投影保留 bias，改善长度外推；
+- **<span class="qwen-term">FFN 降维 / SwiGLU</span>**：SwiGLU 的表达力更强，但会增加中间层参数，所以把 FFN 中间维度从 $4d$ 减小至 $8d/3$；
+- **<span class="qwen-change">不共享输入输出 embedding</span>**：输入 embedding 与输出投影不共享权重。
 
   假设词表大小为 $V$，模型 hidden size 为 $d$，输入 embedding 矩阵 $E\in\mathbb{R}^{V\times d}$ 通过查表将 token ID 转换为 $d$ 维向量。以往都会采用权重共享（tied embedding），将输出投影使用它的转置 $E^\top\in\mathbb{R}^{d\times V}$，将最终 hidden state 映射为词表中各 token 的分数。
 
@@ -142,9 +154,9 @@ Qwen-1 采用了 LLaMA 的模型架构，主要设计在于：
 
 Qwen-1 的原始训练序列长度是 2048。为了在推理时扩展模型的上下文，使用了：
 
-- NTK-aware interpolation；
-- dynamic NTK-aware interpolation；
-- LogN-Scaling；
+- <span class="qwen-term">NTK-aware interpolation</span>；
+- <span class="qwen-term">dynamic NTK-aware interpolation</span>；
+- <span class="qwen-term">LogN-Scaling</span>；
 - 分层分配的窗口注意力。
 
 这些方法主要是在不重新训练模型的情况下延长上下文，使模型在超过训练长度后仍能保持相对稳定的性能。
@@ -152,6 +164,11 @@ Qwen-1 的原始训练序列长度是 2048。为了在推理时扩展模型的�
 ### 2.3 后训练：SFT → 奖励模型 → PPO/RLHF
 
 Qwen-1 的后训练并不复杂，主要流程是：
+
+![Qwen 原始报告中的模型谱系，含预训练、奖励模型、SFT 和 RLHF 路径](/assets/img/qwen/qwen1-lineage.webp){: .qwen-figure width="1113" height="477" }
+
+图 1 · 从预训练模型到对话、奖励和专用模型的训练路径。来源：[Qwen Technical Report，Figure 1](https://arxiv.org/abs/2309.16609)，PDF 第 3 页。原图也包含 Qwen-VL 分支。
+{: .qwen-caption }
 
 ```text
 预训练 Qwen
@@ -165,9 +182,9 @@ PPO：用奖励模型优化策略
 Qwen-Chat / Qwen-Chat-RLHF
 ```
 
-SFT 阶段使用 ChatML 风格格式区分 system、user 和 assistant，并对 system/user 部分做 loss mask，主要让模型学习 assistant 的目标输出。数据不仅包括普通问答，也包括工具调用、代码解释器、Agent 和安全拒答。
+<span class="qwen-data">SFT</span> 阶段使用 <span class="qwen-term">ChatML</span> 风格格式区分 system、user 和 assistant，并对 system/user 部分做 loss mask，主要让模型学习 assistant 的目标输出。数据不仅包括普通问答，也包括工具调用、代码解释器、Agent 和安全拒答。
 
-RLHF 阶段先训练偏好模型，再使用 PPO。Qwen 报告中还提到：
+<span class="qwen-data">RLHF</span> 阶段先训练偏好模型，再使用 <span class="qwen-data">PPO</span>。Qwen 报告中还提到：
 
 - 使用不同大小的 Qwen 和不同采样策略生成多样回答；
 - 通过约 6600 个细粒度标签控制提示词的覆盖范围和难度；
@@ -184,9 +201,14 @@ Qwen1.5 是 Qwen-1 的一次系统升级，但没有完全换代。官方在发�
 
 Qwen1.5 仍然保留 Qwen-1 的大部分设计：RoPE、QKV bias、SwiGLU、RMSNorm、Pre-Norm 和 BBPE。比较明显的变化是：
 
-- **Qwen1.5-32B 和 Qwen1.5-110B 使用 GQA**，减少 KV cache 和推理带宽；其他小尺寸在早期版本中仍主要使用 MHA；
-- 首次发布了 MoE 模型即 **Qwen1.5-MoE-A2.7B**，用较少的激活参数获得接近 7B Dense 模型的效果；
+- **<span class="qwen-change">Qwen1.5-32B 和 Qwen1.5-110B 使用 GQA</span>**，减少 KV cache 和推理带宽；其他小尺寸在早期版本中仍主要使用 MHA；
+- 首次发布了 MoE 模型即 **<span class="qwen-term">Qwen1.5-MoE-A2.7B</span>**，用较少的激活参数获得接近 7B Dense 模型的效果；
 - 所有系列统一支持最长约 32K 的上下文，并将代码合入 Hugging Face Transformers，推理和微调门槛明显降低。
+
+![MHA、GQA 与 MQA 中 Query、Key、Value 头的对应关系](/assets/img/qwen/gqa-heads.webp){: .qwen-figure width="1230" height="417" }
+
+图 2 · 中间的 GQA 让一组 Query 共享 Key / Value；左右分别是 MHA 和 MQA。来源：[GQA 原论文，Figure 2](https://arxiv.org/abs/2305.13245)，PDF 第 2 页。
+{: .qwen-caption }
 
 ### 3.2 后训练
 
@@ -203,21 +225,29 @@ Qwen2 在 2024 年 6 月发布，模型规模包括 0.5B、1.5B、7B、57B-A14B 
 
 Qwen2 延续了 RoPE、QKV bias、SwiGLU 和 Pre-Norm + RMSNorm，主要改进在于：
 
-- **分组查询注意力（GQA）**：所有尺寸模型统一使用 GQA，降低 KV cache 的开销。
+- **<span class="qwen-term">分组查询注意力（GQA）</span>**：所有尺寸模型统一使用 GQA，降低 KV cache 的开销。
 
   传统 MHA 为每个 Q 头分配独立的 K/V 头，而 GQA 让多个 Q 头共享一组 K/V 头。例如，Qwen2-7B 有 28 个 Q 头、4 个 KV 头，即每 7 个 Q 头共享一组 K/V；Qwen2-72B 则是 64 个 Q 头、8 个 KV 头。由于自回归生成需要缓存历史 K/V，减少 KV 头数可以降低缓存显存和带宽开销，改善长上下文推理的吞吐。
 
-- **长上下文扩展**：DCA + YARN。
+- **<span class="qwen-term">长上下文扩展</span>**：<span class="qwen-term">DCA + YARN</span>。
 
   Qwen2 在预训练末期将序列长度从 4K 扩展到 32K，并把 RoPE 基数从 10,000 提高到 1,000,000。推理时，DCA 将长序列分成 chunk，处理块内与块间的相对位置；YARN 调整 RoPE 频率和注意力缩放，缓解超过训练长度后的性能下降。通过这些方法，Qwen2 上下文扩展至 **32k**，最高支持 **128K** 的上下文。
 
-- **细粒度 MoE + 共享专家**：在 Qwen2-57B-A14B 中，用多个专家 FFN 替代普通的 Dense FFN。
+- **<span class="qwen-change">细粒度 MoE + 共享专家</span>**：在 Qwen2-57B-A14B 中，用多个专家 FFN 替代普通的 Dense FFN。
 
   该模型包含 64 个路由专家，每个 token 根据路由分数选择其中 8 个参与计算，另有 8 个共享专家参与所有 token 的计算。相比少量大专家，细粒度设计使用更小的专家，在相近的总参数和激活参数预算下提供更多组合；共享专家用于学习通用特征，路由专家则可以形成更有区分度的能力。模型总参数约 57B，但每个 token 只激活约 14B 参数，从而兼顾模型容量和计算成本。
 
+![DCA 中块内、跨块和相邻块三种注意力的相对位置矩阵](/assets/img/qwen/dca-attention.webp){: .qwen-figure width="1194" height="417" }
+
+图 3 · DCA 分别处理块内、跨块与相邻块边界的相对位置。三幅子图的 Query / Key 位置索引均保留完整。来源：[DCA 原论文，Figure 2](https://arxiv.org/abs/2402.17463)，PDF 第 4 页。
+{: .qwen-caption }
+
+> <span class="qwen-term">GQA</span> 主要减少 KV cache 的存储和带宽开销；<span class="qwen-term">DCA / YaRN</span> 主要解决长上下文中的位置与外推问题。二者改善的是不同环节。
+{: .qwen-insight }
+
 ### 4.2 预训练：从 3T 扩大到 7T
 
-Qwen2 的数据规模从 Qwen1.5 的约 3T 增加到超过 7T。报告还专门强调了对数据的选择和清洗；Qwen2 的 MoE 模型还额外进行了约 4.5T token 的 upcycling 式训练。
+Qwen2 的数据规模从 Qwen1.5 的约 <span class="qwen-data">3T</span> 增加到超过 <span class="qwen-data">7T</span>。报告还专门强调了对数据的选择和清洗；Qwen2 的 MoE 模型还额外进行了约 4.5T token 的 upcycling 式训练。
 
 ### 4.3 后训练： SFT & DPO
 
@@ -230,8 +260,8 @@ Qwen2 的后训练仍然分为 SFT 和偏好优化。
 
 2. RLHF 被拆成两个阶段：
 
-- **Off-Policy 阶段**：使用预先构造的偏好对，进行 DPO；
-- **On-Policy 阶段**：当前策略模型生成多条回答，由奖励模型选出较好和较差的回答，再把新偏好对继续用于 DPO。
+- **<span class="qwen-data">Off-Policy 阶段</span>**：使用预先构造的偏好对，进行 DPO；
+- **<span class="qwen-data">On-Policy 阶段</span>**：当前策略模型生成多条回答，由奖励模型选出较好和较差的回答，再把新偏好对继续用于 DPO。
 
 
 
@@ -239,7 +269,7 @@ Qwen2 的后训练仍然分为 SFT 和偏好优化。
 
 Qwen2.5  延续了 Qwen2 的架构设计，开源尺寸包括 0.5B、1.5B、3B、7B、14B、32B 和 72B。7B 以上模型支持 128K 上下文，0.5B/1.5B/3B 主要是 32K。
 
-Qwen2.5 还扩展了控制 token，并将高质量预训练数据扩展到 **18T token**，对于更大的数据规模进行了更细致的数据配比，这里很明显的突出了高质量的数据对于模型训练的重要性。
+Qwen2.5 还扩展了控制 token，并将高质量预训练数据扩展到 **<span class="qwen-data">18T token</span>**，对于更大的数据规模进行了更细致的数据配比，这里很明显的突出了高质量的数据对于模型训练的重要性。
 
 
 ### 5.1 预训练：长上下文扩展
@@ -255,7 +285,7 @@ Qwen2.5 还扩展了控制 token，并将高质量预训练数据扩展到 **18T
 
 #### 第一步：扩大 SFT 覆盖面
 
-Qwen2.5 的 SFT 数据超过 100 万条，并专门补齐 Qwen2 的短板（依旧数据工程）：
+Qwen2.5 的 <span class="qwen-data">SFT</span> 数据超过 <span class="qwen-data">100 万条</span>，并专门补齐 Qwen2 的短板（依旧数据工程）：
 
 - 输出长度从常见的 2K 提高到最高 8K；
 - 数学中加入 Qwen2.5-Math 的 CoT 数据；
@@ -266,13 +296,13 @@ Qwen2.5 的 SFT 数据超过 100 万条，并专门补齐 Qwen2 的短板（依�
 
 #### 第二步：Off-Policy RL / DPO
 
-Qwen2.5 构造约 15 万对偏好数据。正确或满足约束的回答作为正样本，错误回答作为负样本，再用 DPO 训练。
+Qwen2.5 构造约 <span class="qwen-data">15 万对偏好数据</span>。正确或满足约束的回答作为正样本，错误回答作为负样本，再用 <span class="qwen-data">DPO</span> 训练。
 
 这类任务的共同特点是：答案虽然难生成，但相对容易验证。因此，先用程序或规则建立可靠的偏好信号，再做 DPO，比单纯依赖人工偏好更可扩展。
 
 #### 第三步：在线 RL / GRPO
 
-在线阶段 Qwen2.5 采用 GRPO，每个问题采样多条回答，用奖励模型和规则奖励比较它们的相对质量，再更新模型。
+在线阶段 Qwen2.5 采用 <span class="qwen-data">GRPO</span>，每个问题采样多条回答，用奖励模型和规则奖励比较它们的相对质量，再更新模型。
 
 可以把 Qwen2.5 的后训练总结成：
 
@@ -294,16 +324,16 @@ Qwen3 是文本主线中最重要的一次后训练范式变化。它不再把�
 
 Qwen3 的 Dense 主干仍然使用 GQA、SwiGLU、RoPE 和 RMSNorm + Pre-Norm，但做了两个关键改变：
 
-1. **移除 QKV bias**：与 Qwen-1/Qwen2/Qwen2.5 的做法相反；
-2. **加入 QK-Norm**：对注意力中的 Q 和 K 单独归一化，改善训练稳定性（与 LLaMA4 保持一致）。
+1. **<span class="qwen-change">移除 QKV bias</span>**：与 Qwen-1/Qwen2/Qwen2.5 的做法相反；
+2. **<span class="qwen-change">加入 QK-Norm</span>**：对注意力中的 Q 和 K 单独归一化，改善训练稳定性（与 LLaMA4 保持一致）。
 
 ### 6.2 MoE：128 个专家并支持 Top-8 加权输出，无共享专家
 
-Qwen3-30B-A3B 和 Qwen3-235B-A22B 都采用 128 个总专家，每个 token 激活 8 个专家；和 Qwen2 的 MoE 不同，Qwen3 **不再设置 shared experts**，并引入 global-batch load balancing loss，让路由器在全局 batch 范围内更均衡地使用专家。
+Qwen3-30B-A3B 和 Qwen3-235B-A22B 都采用 <span class="qwen-term">128 个总专家，每个 token 激活 8 个专家</span>；和 Qwen2 的 MoE 不同，Qwen3 **<span class="qwen-change">不再设置 shared experts</span>**，并引入 global-batch load balancing loss，让路由器在全局 batch 范围内更均衡地使用专家。
 
 ### 6.3 预训练：36T token、119 种语言、三阶段训练
 
-Qwen3 的预训练数据约 36T token，覆盖 119 种语言和方言。它还使用多模态模型辅助文本数据构造：
+Qwen3 的预训练数据约 <span class="qwen-data">36T token</span>，覆盖 <span class="qwen-data">119 种语言和方言</span>。它还使用多模态模型辅助文本数据构造：
 
 - 用 Qwen2.5-VL 从 PDF 类文档中抽取文字；
 - 用 Qwen2.5-Math 合成数学数据；
@@ -321,28 +351,38 @@ Qwen3 的预训练数据约 36T token，覆盖 119 种语言和方言。它还�
 
 Qwen3 的后训练可以分成四个阶段。
 
-- Stage 1：Long-CoT Cold Start：构造数学、代码、逻辑推理和 STEM 问题。Qwen2.5-72B-Instruct 用来过滤问题，QwQ-32B 用来生成候选长思维链。
+![Qwen3 旗舰模型四阶段后训练和轻量模型蒸馏的完整流程](/assets/img/qwen/qwen3-post-training.webp){: .qwen-figure width="1365" height="555" }
 
-- Stage 2：Reasoning RL：收集了 3,995 个 query-verifier pair，使用 GRPO 做推理强化学习，主要覆盖数学和代码等可验证任务。
+图 4 · 上半部分是旗舰模型的四阶段后训练，下半部分是轻量模型的蒸馏路径。来源：[Qwen3 Technical Report，Figure 1](https://arxiv.org/abs/2505.09388)，PDF 第 9 页。
+{: .qwen-caption }
 
-- Stage 3：Thinking Mode Fusion：如果只做长 CoT，模型可能会在简单问题上也输出很长的思考。Qwen3 因此把“思考”和“不思考”的数据合并进行持续 SFT，并设计了 `/think` 和 `/no_think` 控制标记：
+- <span class="qwen-data">Stage 1：Long-CoT Cold Start</span>：构造数学、代码、逻辑推理和 STEM 问题。Qwen2.5-72B-Instruct 用来过滤问题，QwQ-32B 用来生成候选长思维链。
+
+- <span class="qwen-data">Stage 2：Reasoning RL</span>：收集了 3,995 个 query-verifier pair，使用 GRPO 做推理强化学习，主要覆盖数学和代码等可验证任务。
+
+- <span class="qwen-data">Stage 3：Thinking Mode Fusion</span>：如果只做长 CoT，模型可能会在简单问题上也输出很长的思考。Qwen3 因此把“思考”和“不思考”的数据合并进行持续 SFT，并设计了 `/think` 和 `/no_think` 控制标记：
 
 
->用户问题 /think       → 生成 <think>...</think> 后回答
+>用户问题 /think       → 生成 `<think>...</think>` 后回答
 >
 >用户问题 /no_think    → 跳过实质推理，直接回答
 
 
 默认情况下模型可以进入 Thinking 模式，但开发者可以通过 chat template 或参数关闭它。更重要的是，模型还可以根据一个 thinking budget 截断思考，在有限 token 预算下直接利用已经生成的中间推理给出答案。
 
-- Stage 4：General RL: 最后用覆盖 20 多类任务的奖励系统，奖励由三类信号组成：规则奖励、带参考答案的模型奖励、不带参考答案的偏好奖励。
+- <span class="qwen-data">Stage 4：General RL</span>：最后用覆盖 20 多类任务的奖励系统，奖励由三类信号组成：规则奖励、带参考答案的模型奖励、不带参考答案的偏好奖励。
+
+![Qwen3-235B-A22B 在四项基准中随思考预算变化的成绩曲线](/assets/img/qwen/qwen3-thinking-budget.webp){: .qwen-figure width="1368" height="891" }
+
+图 5 · 思考预算与效果的关系。四个基准、两类模式的图例以及坐标轴均保留；横轴是思考 token 预算，而非耗时。来源：[Qwen3 Technical Report，Figure 2](https://arxiv.org/abs/2505.09388)，PDF 第 20 页。
+{: .qwen-caption }
 
 ### 6.5 Strong-to-Weak Distillation(感觉是和DeepSeek R1 蒸馏模型一个模式)
 
 对于 0.6B～14B Dense 模型和 30B-A3B 这类轻量模型，Qwen3 采用 Strong-to-Weak Distillation：
 
-1. **Off-policy distillation**：用大教师模型在 `/think` 和 `/no_think` 两种模式下生成数据，先教学生模型基本的推理和模式切换；
-2. **On-policy distillation**：让学生模型自己生成序列，再让学生的 logits 对齐 Qwen3-32B 或 Qwen3-235B-A22B 教师 logits，最小化 KL 散度。
+1. **<span class="qwen-data">Off-policy distillation</span>**：用大教师模型在 `/think` 和 `/no_think` 两种模式下生成数据，先教学生模型基本的推理和模式切换；
+2. **<span class="qwen-data">On-policy distillation</span>**：让学生模型自己生成序列，再让学生的 logits 对齐 Qwen3-32B 或 Qwen3-235B-A22B 教师 logits，最小化 KL 散度。
 
 报告中的实验显示，蒸馏相比直接 RL 只需约十分之一的 GPU 小时，同时在部分任务上取得更好的结果。
 
@@ -426,3 +466,5 @@ Qwen3
 
 <!-- 1. **Attention / RoPE / GQA / MoE 如何让模型更高效地处理更长上下文；**
 2. **SFT / DPO / GRPO / Distillation 如何把基础模型变成可控、可验证、可执行的 Agent。** -->
+
+</div>

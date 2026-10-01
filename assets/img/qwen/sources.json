@@ -1,0 +1,101 @@
+[
+  {
+    "asset": "qwen1-lineage.webp",
+    "source": "https://arxiv.org/pdf/2309.16609",
+    "source_sha256": "5d4a9c3f6da9e9fa18a444bc3a663271dcf5ada36cc4c5dfe607a041619be798",
+    "pdf_page": 3,
+    "figure": 1,
+    "crop_points": [
+      118,
+      374,
+      489,
+      533
+    ],
+    "pixels": [
+      1113,
+      477
+    ],
+    "note": "Full diagram retained; original caption is cited separately in the article."
+  },
+  {
+    "asset": "gqa-heads.webp",
+    "source": "https://arxiv.org/pdf/2305.13245",
+    "source_sha256": "ba9094fe73db9bf515d47ae8b2d502fee9d8a6c7b1327e197ddb160f4c63b94a",
+    "pdf_page": 2,
+    "figure": 2,
+    "crop_points": [
+      96,
+      72,
+      506,
+      211
+    ],
+    "pixels": [
+      1230,
+      417
+    ],
+    "note": "Full diagram retained; original caption is cited separately in the article."
+  },
+  {
+    "asset": "dca-attention.webp",
+    "source": "https://arxiv.org/pdf/2402.17463",
+    "source_sha256": "089c2ff3f545cadd56f81b50232fe8e3e0f6e832a938b7c8900910fc7e819d1e",
+    "pdf_page": 4,
+    "figure": 2,
+    "crop_points": [
+      98,
+      64,
+      496,
+      203
+    ],
+    "pixels": [
+      1194,
+      417
+    ],
+    "note": "Full diagram retained; original caption is cited separately in the article."
+  },
+  {
+    "asset": "qwen3-post-training.webp",
+    "source": "https://arxiv.org/pdf/2505.09388",
+    "source_sha256": "84a5e2b1fa04bb774bf12ae606d1e6d9dd2147ed2ebe78a4cfeb91ba380ffdd5",
+    "pdf_page": 9,
+    "figure": 1,
+    "crop_points": [
+      70,
+      564,
+      525,
+      749
+    ],
+    "pixels": [
+      1365,
+      555
+    ],
+    "note": "Full diagram retained; original caption is cited separately in the article."
+  },
+  {
+    "asset": "qwen3-thinking-budget.webp",
+    "source": "https://arxiv.org/pdf/2505.09388",
+    "source_sha256": "84a5e2b1fa04bb774bf12ae606d1e6d9dd2147ed2ebe78a4cfeb91ba380ffdd5",
+    "pdf_page": 20,
+    "figure": 2,
+    "crop_points": [
+      70,
+      396,
+      526,
+      693
+    ],
+    "pixels": [
+      1368,
+      891
+    ],
+    "note": "Full diagram retained; original caption is cited separately in the article."
+  },
+  {
+    "asset": "qwen-cover.webp",
+    "derived_from": "qwen3-post-training.webp",
+    "pixels": [
+      1059,
+      661
+    ],
+    "operation": "Aspect-preserving resize and white padding; no cropping."
+  }
+]
