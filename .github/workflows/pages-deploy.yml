@@ -48,6 +48,9 @@ jobs:
       - name: Prepare note post
         run: cp -- "notes/位置编码/位置编码.md" "_posts/2026-09-18-positional-encoding.md"
 
+      - name: Prepare Qwen note post
+        run: cp -- "notes/qwen/qwen.md" "_posts/2026-09-29-qwen-text-models.md"
+
       - name: Build site
         run: bundle exec jekyll b -d "_site${{ steps.pages.outputs.base_path }}"
         env:
