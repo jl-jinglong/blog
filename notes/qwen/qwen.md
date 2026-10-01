@@ -1,10 +1,10 @@
 ---
 title: "Qwen 文本模型系列：从 Qwen-1 到 Qwen3 的架构与后训练演进"
-date: 2026-09-29 00:00:00 +0800
+date: 2026-09-26 00:00:00 +0800
 permalink: /posts/qwen-text-models/
-description: "从工程视角梳理 Qwen 文本模型系列的架构、Tokenizer、上下文扩展和后训练流程。"
-categories: [大模型基础]
-tags: [Qwen, LLM, RLHF, PPO, DPO, GRPO, MoE]
+description: "本文梳理了 Qwen 文本模型系列的架构、Tokenizer、上下文扩展和后训练流程，包括Qwen、Qwen1.5、Qwen2、Qwen2.5 和 Qwen3。"
+categories: [Qwen]
+tags: [LLM, RLHF, PPO, DPO, GRPO, MoE]
 math: true
 toc: true
 image:
@@ -20,14 +20,14 @@ image:
 
 ## 1. 速看版总结
 
-> **先抓住这条演进主线**
+<!-- > **先抓住这条演进主线**
 >
 > - **[Qwen-1](#2-qwen-1)**：<span class="qwen-term">RoPE / RMSNorm / SwiGLU</span> 建立主干，<span class="qwen-change">QKV bias</span> 改善外推，<span class="qwen-data">SFT → PPO</span> 完成对齐。
 > - **[Qwen1.5](#3-qwen-15)**：扩大尺寸和上下文，在大模型上尝试 <span class="qwen-term">GQA</span>，引入 <span class="qwen-term">MoE</span>。
 > - **[Qwen2](#4-qwen-2)**：全尺寸 <span class="qwen-term">GQA</span>，<span class="qwen-term">DCA + YaRN</span> 扩展上下文，离线与在线 <span class="qwen-data">DPO</span> 优化偏好。
 > - **[Qwen2.5](#5-qwen-25)**：重点在数据与后训练，<span class="qwen-data">18T token、百万级 SFT、DPO + GRPO</span>。
 > - **[Qwen3](#6-qwen3)**：<span class="qwen-change">移除 QKV bias、加入 QK-Norm</span>，融合思考与非思考模式，并通过 <span class="qwen-data">Strong-to-Weak Distillation</span> 训练轻量模型。
-{: .qwen-summary }
+{: .qwen-summary } -->
 
 ### 1.1 模型列表
 
@@ -141,7 +141,7 @@ Qwen-1 的公开权重最早在 2023 年发布，技术报告覆盖 Qwen、Qwen-
 
 Qwen-1 采用了 LLaMA 的模型架构，主要设计在于：
 
-- **位置编码**：[RoPE]({{ '/posts/positional-encoding/' | relative_url }})，在实现中使用 FP32 保存，以优先考虑模型性能；
+- **位置编码**：<a class="note-link" href="{{ '/posts/positional-encoding/' | relative_url }}"><i class="far fa-file-alt fa-fw"></i>大模型中的位置编码：从绝对位置到 RoPE</a>，在实现中使用 FP32 保存，以优先考虑模型性能；
 - **<span class="qwen-change">QKV bias</span>**：只在 Q、K、V 投影保留 bias，改善长度外推；
 - **<span class="qwen-term">FFN 降维 / SwiGLU</span>**：SwiGLU 的表达力更强，但会增加中间层参数，所以把 FFN 中间维度从 $4d$ 减小至 $8d/3$；
 - **<span class="qwen-change">不共享输入输出 embedding</span>**：输入 embedding 与输出投影不共享权重。
@@ -372,10 +372,10 @@ Qwen3 的后训练可以分成四个阶段。
 
 - <span class="qwen-data">Stage 4：General RL</span>：最后用覆盖 20 多类任务的奖励系统，奖励由三类信号组成：规则奖励、带参考答案的模型奖励、不带参考答案的偏好奖励。
 
-![Qwen3-235B-A22B 在四项基准中随思考预算变化的成绩曲线](/assets/img/qwen/qwen3-thinking-budget.webp){: .qwen-figure width="1368" height="891" }
+<!-- ![Qwen3-235B-A22B 在四项基准中随思考预算变化的成绩曲线](/assets/img/qwen/qwen3-thinking-budget.webp){: .qwen-figure width="1368" height="891" }
 
 图 5 · 思考预算与效果的关系。四个基准、两类模式的图例以及坐标轴均保留；横轴是思考 token 预算，而非耗时。来源：[Qwen3 Technical Report，Figure 2](https://arxiv.org/abs/2505.09388)，PDF 第 20 页。
-{: .qwen-caption }
+{: .qwen-caption } -->
 
 ### 6.5 Strong-to-Weak Distillation(感觉是和DeepSeek R1 蒸馏模型一个模式)
 
