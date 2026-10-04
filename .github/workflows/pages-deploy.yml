@@ -51,6 +51,12 @@ jobs:
       - name: Prepare Qwen note post
         run: cp -- "notes/qwen/qwen.md" "_posts/2026-09-29-qwen-text-models.md"
 
+      - name: Prepare long-context note post
+        run: cp -- "notes/上下文扩展/上下文扩展.md" "_posts/2026-10-04-long-context.md"
+
+      - name: Prepare Qwen multimodal note post
+        run: cp -- "notes/qwen/qwen-multimodal.md" "_posts/2026-10-02-qwen-multimodal-models.md"
+
       - name: Build site
         run: bundle exec jekyll b -d "_site${{ steps.pages.outputs.base_path }}"
         env:
