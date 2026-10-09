@@ -16,7 +16,7 @@ image:
 
 本文以 Qwen 文本模型为对象，对比 Qwen-1、Qwen1.5、Qwen2、Qwen2.5 与 Qwen3 的设计演进，重点分析各代在模型架构、预训练数据、后训练策略与推理能力上的改进与取舍。
 
-> 本文主要讨论公开技术报告较完整的 Qwen、Qwen1.5、Qwen2、Qwen2.5 和 Qwen3。后续的 Qwen3.5、Qwen3.6、Qwen3.8 只简单提及。
+> 本文主要讨论公开技术报告较早的 Qwen、Qwen1.5、Qwen2、Qwen2.5 和 Qwen3。
 
 ## 1. 速看版总结
 
@@ -141,8 +141,8 @@ Qwen-1 的公开权重最早在 2023 年发布，技术报告覆盖 Qwen、Qwen-
 
 Qwen-1 采用了 LLaMA 的模型架构，主要设计在于：
 
-- **位置编码**：<a class="note-link" href="{{ '/posts/positional-encoding/' | relative_url }}"><i class="far fa-file-alt fa-fw"></i>大模型中的位置编码：从绝对位置到 RoPE</a>，在实现中使用 FP32 保存，以优先考虑模型性能；
-- **<span class="qwen-change">QKV bias</span>**：只在 Q、K、V 投影保留 bias，改善长度外推；
+- **位置编码**：RoPE：<a class="note-link" href="{{ '/posts/positional-encoding/' | relative_url }}"><i class="far fa-file-alt fa-fw"></i>大模型中的位置编码：从绝对位置到 RoPE</a>，在实现中使用 FP32 保存，以优先考虑模型性能；
+- **<span class="qwen-change">QKV bias</span>**：只在 Q、K、V 投影保留 bias，改善长度外推：<a class="note-link" href="https://spaces.ac.cn/archives/9577"><i class="far fa-file-alt fa-fw"></i>Jianlin Su. The magical effect of the Bias term: RoPE + Bias = better length extrapolation, 2023b</a>；
 - **<span class="qwen-term">FFN 降维 / SwiGLU</span>**：SwiGLU 的表达力更强，但会增加中间层参数，所以把 FFN 中间维度从 $4d$ 减小至 $8d/3$；
 - **<span class="qwen-change">不共享输入输出 embedding</span>**：输入 embedding 与输出投影不共享权重。
 
@@ -184,12 +184,13 @@ Qwen-Chat / Qwen-Chat-RLHF
 
 <span class="qwen-data">SFT</span> 阶段使用 <span class="qwen-term">ChatML</span> 风格格式区分 system、user 和 assistant，并对 system/user 部分做 loss mask，主要让模型学习 assistant 的目标输出。数据不仅包括普通问答，也包括工具调用、代码解释器、Agent 和安全拒答。
 
-<span class="qwen-data">RLHF</span> 阶段先训练偏好模型，再使用 <span class="qwen-data">PPO</span>。Qwen 报告中还提到：
+而 <span class="qwen-data">RLHF</span> 阶段先训练偏好模型，再使用 <span class="qwen-data">PPO</span>。
+<!-- Qwen 报告中还提到：
 
 - 使用不同大小的 Qwen 和不同采样策略生成多样回答；
 - 通过约 6600 个细粒度标签控制提示词的覆盖范围和难度；
 - 使用 KL 惩罚限制策略模型偏离参考模型；
-- 使用预训练梯度缓解 alignment tax，也就是对齐后通用能力下降的问题。
+- 使用预训练梯度缓解 alignment tax，也就是对齐后通用能力下降的问题。 -->
 
 
 
@@ -242,12 +243,13 @@ Qwen2 延续了 RoPE、QKV bias、SwiGLU 和 Pre-Norm + RMSNorm，主要改进�
 图 3 · DCA 分别处理块内、跨块与相邻块边界的相对位置。三幅子图的 Query / Key 位置索引均保留完整。来源：[DCA 原论文，Figure 2](https://arxiv.org/abs/2402.17463)，PDF 第 4 页。
 {: .qwen-caption }
 
-> <span class="qwen-term">GQA</span> 主要减少 KV cache 的存储和带宽开销；<span class="qwen-term">DCA / YaRN</span> 主要解决长上下文中的位置与外推问题。二者改善的是不同环节。
-{: .qwen-insight }
+<!-- > <span class="qwen-term">GQA</span> 主要减少 KV cache 的存储和带宽开销；<span class="qwen-term">DCA / YaRN</span> 主要解决长上下文中的位置与外推问题。二者改善的是不同环节。
+{: .qwen-insight } -->
 
-### 4.2 预训练：从 3T 扩大到 7T
+### 4.2 预训练
 
 Qwen2 的数据规模从 Qwen1.5 的约 <span class="qwen-data">3T</span> 增加到超过 <span class="qwen-data">7T</span>。报告还专门强调了对数据的选择和清洗；Qwen2 的 MoE 模型还额外进行了约 4.5T token 的 upcycling 式训练。
+>此外，Qwen 还在放宽了数据质量后将数据规模扩大到了 12T，但是并没有明显的性能提升，突出数据质量的重要性远高于数据规模。
 
 ### 4.3 后训练： SFT & DPO
 
@@ -318,7 +320,7 @@ Qwen2.5 构造约 <span class="qwen-data">15 万对偏好数据</span>。正确�
 
 ## 6. Qwen3
 
-Qwen3 是文本主线中最重要的一次后训练范式变化。它不再把“普通对话模型”和“长思维链推理模型”完全拆成两个产品，而是让同一个模型在 Thinking 和 Non-thinking 两种模式之间切换。
+Qwen3 首次提出同一个模型的 Thinking 和 Non-thinking 两种模式。
 
 ### 6.1 架构：移除 QKV bias，加入 QK-Norm
 
@@ -329,7 +331,7 @@ Qwen3 的 Dense 主干仍然使用 GQA、SwiGLU、RoPE 和 RMSNorm + Pre-Norm，
 
 ### 6.2 MoE：128 个专家并支持 Top-8 加权输出，无共享专家
 
-Qwen3-30B-A3B 和 Qwen3-235B-A22B 都采用 <span class="qwen-term">128 个总专家，每个 token 激活 8 个专家</span>；和 Qwen2 的 MoE 不同，Qwen3 **<span class="qwen-change">不再设置 shared experts</span>**，并引入 global-batch load balancing loss，让路由器在全局 batch 范围内更均衡地使用专家。
+Qwen3-30B-A3B 和 Qwen3-235B-A22B 都采用 <span class="qwen-term">128 个总专家，每个 token 激活 8 个专家</span>；和 Qwen2 的 MoE 不同，Qwen3 **<span class="qwen-change">不再设置 shared experts</span>**，并引入 global-batch load balancing loss，鼓励路由器将Token相对均匀地分配给各个专家。
 
 ### 6.3 预训练：36T token、119 种语言、三阶段训练
 
@@ -439,17 +441,7 @@ Qwen3
 - MoE 让总参数和激活参数解耦，但也引入路由负载均衡和跨卡通信问题；
 - 后训练从人工偏好转向规则、执行器和真实环境反馈，决定了模型能否从“会说”变成“会做”。 -->
 
-## 8. Qwen3 之后：文本模型正在变成原生多模态 Agent
 
-如果把范围扩展到 2026 年，Qwen3.5、Qwen3.6 和 Qwen3.8 已经不再是简单的“文本模型下一代”。从 [Qwen3.5/Qwen3.6/Qwen3.8 官方仓库](https://github.com/QwenLM/Qwen3.8) 和 [Qwen3.5 发布说明](https://qwen.ai/blog?email_hash=23463b99b62a72f26ed677cc556c44e8&id=qwen3.5) 看，它们开始采用：
-
-- 视觉和文本的 early fusion；
-- Gated DeltaNet + Gated Attention 的混合注意力；
-- 更高稀疏度的 MoE；
-- 面向 Agent 长程执行的强化学习；
-- 更广的语言和方言覆盖。
-
-这条路线说明 Qwen 的主线正在从“更强的文本生成器”转向“能理解文本、图像、工具和环境，并把任务执行完的基础模型”。不过，如果只想学习 Qwen 文本模型的核心方法，读到 Qwen3 已经足够建立完整的架构和后训练框架；后续版本可以作为混合注意力和原生多模态的下一篇笔记。
 
 ## 完整链接：
 
