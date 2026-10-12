@@ -90,6 +90,90 @@
     "note": "Full diagram retained; original caption is cited separately in the article."
   },
   {
+    "asset": "qwen-vl-training.png",
+    "source": "https://arxiv.org/pdf/2308.12966",
+    "source_sha256": "b4eca60ae9d3c1548242da02ece0e2f35ce23d3a983255830d98212aa92e3167",
+    "pdf_page": 4,
+    "figure": 3,
+    "pixels": [
+      1090,
+      510
+    ],
+    "note": "Cropped from the Qwen-VL training pipeline figure; original caption is cited in the article."
+  },
+  {
+    "asset": "qwen2-vl-architecture.png",
+    "source": "https://arxiv.org/pdf/2409.12191",
+    "source_sha256": "30bb0f6c9babf910295d6b7cd34b6f54824236f68782664c3c93fbf4803275d0",
+    "pdf_page": 4,
+    "figure": 2,
+    "pixels": [
+      1441,
+      991
+    ],
+    "note": "Extracted from the Qwen2-VL native dynamic resolution figure; original caption is cited in the article."
+  },
+  {
+    "asset": "qwen2-vl-mrope.png",
+    "source": "https://arxiv.org/pdf/2409.12191",
+    "source_sha256": "30bb0f6c9babf910295d6b7cd34b6f54824236f68782664c3c93fbf4803275d0",
+    "pdf_page": 5,
+    "figure": 3,
+    "pixels": [
+      3059,
+      613
+    ],
+    "note": "Extracted from the Qwen2-VL M-RoPE figure; original caption is cited in the article."
+  },
+  {
+    "asset": "qwen25-vl-architecture.png",
+    "source": "https://arxiv.org/pdf/2502.13923",
+    "source_sha256": "399a28f6ed79f4ece29cca93993fceb56fc304b1d779e49392aec05aff45aba5",
+    "pdf_page": 3,
+    "figure": 1,
+    "pixels": [
+      4579,
+      2999
+    ],
+    "note": "Extracted from the Qwen2.5-VL framework figure; original caption is cited in the article."
+  },
+  {
+    "asset": "qwen25-omni-thinker-talker.png",
+    "source": "https://arxiv.org/pdf/2503.20215",
+    "source_sha256": "95906505512440a3a32c37b10a6aeeef092c44d60fcfaebfb309950685b7cbf1",
+    "pdf_page": 3,
+    "figure": 2,
+    "pixels": [
+      860,
+      700
+    ],
+    "note": "Cropped from the Qwen2.5-Omni Thinker-Talker overview; original caption is cited in the article."
+  },
+  {
+    "asset": "qwen3-vl-architecture.png",
+    "source": "https://arxiv.org/pdf/2511.21631",
+    "source_sha256": "ee075d08e67de1148d6437c6c1d481f7894183b8793905a2de5bf62664f49380",
+    "pdf_page": 3,
+    "figure": 1,
+    "pixels": [
+      5908,
+      3413
+    ],
+    "note": "Extracted from the Qwen3-VL framework figure; original caption is cited in the article."
+  },
+  {
+    "asset": "qwen3-omni-architecture.png",
+    "source": "https://arxiv.org/pdf/2509.17765",
+    "source_sha256": "4608d7f5d0694dd09a66144dac921797e161331d92b5eef133615bec392ec928",
+    "pdf_page": 3,
+    "figure": 2,
+    "pixels": [
+      870,
+      820
+    ],
+    "note": "Cropped from the Qwen3-Omni Thinker-Talker overview; original caption is cited in the article."
+  },
+  {
     "asset": "qwen-cover.webp",
     "derived_from": "qwen3-post-training.webp",
     "pixels": [
