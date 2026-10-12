@@ -54,6 +54,9 @@ jobs:
       - name: Prepare long-context note post
         run: cp -- "notes/上下文扩展/上下文扩展.md" "_posts/2026-10-04-long-context.md"
 
+      - name: Prepare long-context infra note post
+        run: cp -- "notes/上下文扩展/长上下文工程实现.md" "_posts/2026-10-06-long-context-infra.md"
+
       - name: Prepare Qwen multimodal note post
         run: cp -- "notes/qwen/qwen-multimodal.md" "_posts/2026-10-02-qwen-multimodal-models.md"
 
