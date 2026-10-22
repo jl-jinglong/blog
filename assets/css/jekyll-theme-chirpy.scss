@@ -27,6 +27,7 @@ article > header > .post-desc {
   #post-list .post-preview.row {
     display: grid;
     grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+    min-height: 11.8rem;
   }
 
   #post-list .post-preview > .col-md-5,
@@ -108,6 +109,20 @@ article > header > .post-desc {
     aspect-ratio: 1059 / 661;
     height: auto;
     border-radius: 8px 8px 0 0;
+  }
+
+  .qwen-note table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .qwen-note table thead,
+  .qwen-note table tbody {
+    display: table;
+    width: max-content;
+    min-width: 100%;
   }
 }
 

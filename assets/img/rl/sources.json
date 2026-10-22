@@ -1,0 +1,201 @@
+[
+  {
+    "asset": "ppo-clip.webp",
+    "source": "https://arxiv.org/pdf/1707.06347",
+    "source_sha256": "e78feadadbdbb0b601b3c2bcc81404722cd431a489b307545f9b7bea1e8c4f5b",
+    "pdf_page": 3,
+    "figure": 1,
+    "crop_points": [
+      132.0,
+      446.0,
+      452.0,
+      600.0
+    ],
+    "pixels": [
+      960,
+      462
+    ],
+    "note": "Cropped from the original figure; the caption is cited in the article."
+  },
+  {
+    "asset": "dpo-rlhf-vs-dpo.webp",
+    "source": "https://arxiv.org/pdf/2305.18290",
+    "source_sha256": "92cb3a2b71362acda98a789b03d88688fd33cf5fcf13f81d2b1de30ee7d3b67a",
+    "pdf_page": 2,
+    "figure": 1,
+    "crop_points": [
+      104.0,
+      68.0,
+      508.0,
+      156.0
+    ],
+    "pixels": [
+      1212,
+      264
+    ],
+    "note": "Cropped from the original figure; the caption is cited in the article."
+  },
+  {
+    "asset": "dpo-reward-kl.webp",
+    "source": "https://arxiv.org/pdf/2305.18290",
+    "source_sha256": "92cb3a2b71362acda98a789b03d88688fd33cf5fcf13f81d2b1de30ee7d3b67a",
+    "pdf_page": 7,
+    "figure": 2,
+    "crop_points": [
+      104.0,
+      68.0,
+      508.0,
+      226.0
+    ],
+    "pixels": [
+      1212,
+      474
+    ],
+    "note": "Cropped from the original figure; the caption is cited in the article."
+  },
+  {
+    "asset": "grpo-ppo-vs-grpo.webp",
+    "source": "https://arxiv.org/pdf/2402.03300",
+    "source_sha256": "6cc20b3c5b8d25b8b53868fc4ec1792c144f07d67bdf7395138efd4422197e7b",
+    "pdf_page": 13,
+    "figure": 4,
+    "crop_points": [
+      66.0,
+      80.0,
+      522.0,
+      276.0
+    ],
+    "pixels": [
+      1368,
+      588
+    ],
+    "note": "Cropped from the original figure; the caption is cited in the article."
+  },
+  {
+    "asset": "dapo-clip-higher.webp",
+    "source": "https://arxiv.org/pdf/2503.14476",
+    "source_sha256": "f01e4fd347530cadd68e5c36b1998532a6d1adb272c817e73b927453c26e9d79",
+    "pdf_page": 3,
+    "figure": 2,
+    "crop_points": [
+      66.0,
+      96.0,
+      546.0,
+      258.0
+    ],
+    "pixels": [
+      1440,
+      486
+    ],
+    "note": "Cropped from the original figure; the caption is cited in the article."
+  },
+  {
+    "asset": "dapo-metrics.webp",
+    "source": "https://arxiv.org/pdf/2503.14476",
+    "source_sha256": "f01e4fd347530cadd68e5c36b1998532a6d1adb272c817e73b927453c26e9d79",
+    "pdf_page": 10,
+    "figure": 7,
+    "crop_points": [
+      66.0,
+      96.0,
+      546.0,
+      405.0
+    ],
+    "pixels": [
+      1440,
+      927
+    ],
+    "note": "Cropped from the original figure; the caption is cited in the article."
+  },
+  {
+    "asset": "gspo-training-curves.webp",
+    "source": "https://arxiv.org/pdf/2507.18071",
+    "source_sha256": "67221ec313f42d8b3029686b604b2621a311ae0d74e38524092e7c7a94613bd0",
+    "pdf_page": 5,
+    "figure": 1,
+    "crop_points": [
+      66.0,
+      186.0,
+      529.0,
+      453.0
+    ],
+    "pixels": [
+      1389,
+      801
+    ],
+    "note": "Cropped from the original figure; the caption is cited in the article."
+  },
+  {
+    "asset": "gspo-clipping-fraction.webp",
+    "source": "https://arxiv.org/pdf/2507.18071",
+    "source_sha256": "67221ec313f42d8b3029686b604b2621a311ae0d74e38524092e7c7a94613bd0",
+    "pdf_page": 5,
+    "figure": 2,
+    "crop_points": [
+      88.0,
+      626.0,
+      508.0,
+      744.0
+    ],
+    "pixels": [
+      1260,
+      354
+    ],
+    "note": "Cropped from the original figure; the caption is cited in the article."
+  },
+  {
+    "asset": "rl-cover.webp",
+    "derived_from": "grpo-ppo-vs-grpo.webp",
+    "pixels": [
+      1059,
+      661
+    ],
+    "operation": "Aspect-preserving resize and white padding; no cropping."
+  },
+  {
+    "asset": "ppo-pipeline.webp",
+    "origin": "original diagram drawn for this article (tools/rl-diagrams.py)",
+    "pixels": [
+      1785,
+      942
+    ],
+    "note": "PPO \u7684\u56db\u4e2a\u6a21\u578b\uff08\u542b\u662f\u5426\u66f4\u65b0\uff09\u4e0e\u56db\u4e2a\u9636\u6bb5\uff08\u9636\u6bb5 0 \u4e00\u6b21\uff0c\u9636\u6bb5 1\u20133 \u5faa\u73af\uff09\u3002"
+  },
+  {
+    "asset": "grpo-group.webp",
+    "origin": "original diagram drawn for this article (tools/rl-diagrams.py)",
+    "pixels": [
+      1723,
+      880
+    ],
+    "note": "GRPO \u7ec4\u5185\u6bd4\u8f83\uff1a\u540c\u4e00\u9053\u9898 4 \u6761\u56de\u7b54\u7684\u5956\u52b1\u6807\u51c6\u5316\u4e3a\u4f18\u52bf\u3002"
+  },
+  {
+    "asset": "clip-higher.webp",
+    "origin": "original diagram drawn for this article (tools/rl-diagrams.py)",
+    "pixels": [
+      1692,
+      880
+    ],
+    "note": "DAPO Clip-Higher\uff1a\u540c\u4e00\u4e58\u6570\u4e0b\u9ad8/\u4f4e\u6982\u7387 token \u7684\u4e0a\u5347\u7a7a\u95f4\u5bf9\u6bd4\u3002"
+  },
+  {
+    "asset": "gspo-levels.webp",
+    "origin": "original diagram drawn for this article (tools/rl-diagrams.py)",
+    "pixels": [
+      1754,
+      819
+    ],
+    "note": "GRPO\uff08token \u7ea7\u6bd4\u7387\uff09\u4e0e GSPO\uff08\u5e8f\u5217\u7ea7\u6bd4\u7387\uff09\u7684\u5bf9\u6bd4\u3002"
+  },
+  {
+    "asset": "rl2-cover.webp",
+    "origin": "cover built for the part-2 article by padding dpo-rlhf-vs-dpo.webp onto a 1059x661 white canvas",
+    "derived_from": "dpo-rlhf-vs-dpo.webp",
+    "pixels": [
+      1059,
+      661
+    ],
+    "note": "Used only as the post card / social preview image (hidden inside the article)."
+  }
+]
