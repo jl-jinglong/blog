@@ -144,15 +144,6 @@
     "note": "Cropped from the original figure; the caption is cited in the article."
   },
   {
-    "asset": "rl-cover.webp",
-    "derived_from": "grpo-ppo-vs-grpo.webp",
-    "pixels": [
-      1059,
-      661
-    ],
-    "operation": "Aspect-preserving resize and white padding; no cropping."
-  },
-  {
     "asset": "ppo-pipeline.webp",
     "origin": "original diagram drawn for this article (tools/rl-diagrams.py)",
     "pixels": [
@@ -197,5 +188,24 @@
       661
     ],
     "note": "Used only as the post card / social preview image (hidden inside the article)."
+  },
+  {
+    "asset": "rl-cover.webp",
+    "origin": "built for the part-1 article by tools/rl-cover.py",
+    "pixels": [
+      1059,
+      661
+    ],
+    "note": "Card cover for part 1: the PPO pipeline diagram padded to 1059x661. Chosen over the PPO-vs-GRPO figure because part 1 does not cover GRPO.",
+    "derived_from": "ppo-pipeline.webp"
+  },
+  {
+    "asset": "rl-cover-alt.webp",
+    "origin": "built for the part-1 article by tools/rl-cover.py",
+    "pixels": [
+      1059,
+      661
+    ],
+    "note": "Unused alternative cover: a designed three-stage concept chain (tools/rl-cover.py). Type is too small to read at card size."
   }
 ]
