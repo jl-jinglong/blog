@@ -1,0 +1,42 @@
+[
+  {
+    "asset": "ddpm-cover.webp",
+    "source": "https://arxiv.org/pdf/2006.11239",
+    "source_sha256": "aee5e07a802e8dfd2a386374c94fd61d1d056cb7e1e0fec4f28e8120ff5d8505",
+    "pdf_page": 1,
+    "figure": 1,
+    "crop_points": [123.6, 465.12, 500.64, 702.0],
+    "pixels": [1059, 661],
+    "note": "Cover cropped from the DDPM generated-samples figure, padded evenly, and resized to the post-card aspect ratio."
+  },
+  {
+    "asset": "ddpm-progressive.webp",
+    "source": "https://arxiv.org/pdf/2006.11239",
+    "source_sha256": "aee5e07a802e8dfd2a386374c94fd61d1d056cb7e1e0fec4f28e8120ff5d8505",
+    "pdf_page": 7,
+    "figure": 6,
+    "crop_points": [126.72, 408.24, 485.28, 481.68],
+    "pixels": [1200, 246],
+    "note": "Progressive CIFAR-10 generation strip cropped from Figure 6 and resized for the article."
+  },
+  {
+    "asset": "v-prediction-geometry.webp",
+    "source": "https://arxiv.org/pdf/2202.00512",
+    "source_sha256": "cff438be94fd82afe02aaee34b2fb984c92861755128259ffc136a855ef60100",
+    "pdf_page": 15,
+    "figure": 5,
+    "crop_points": [216.96, 234.96, 395.04, 415.2],
+    "pixels": [790, 799],
+    "note": "Geometry of the v-parameterization cropped from Figure 5 and padded with equal margins."
+  },
+  {
+    "asset": "fm-vector-fields.webp",
+    "source": "https://arxiv.org/pdf/2210.02747",
+    "source_sha256": "5eeb39ba516396924aba4787452f9d0abdee88467a4d0c264d9f66cad0c5ee14",
+    "pdf_page": 6,
+    "figure": 2,
+    "crop_points": [107.04, 80.88, 501.84, 143.76],
+    "pixels": [1400, 223],
+    "note": "Diffusion conditional score field versus OT conditional vector field, cropped from Figure 2."
+  }
+]

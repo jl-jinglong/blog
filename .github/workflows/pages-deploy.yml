@@ -60,6 +60,9 @@ jobs:
       - name: Prepare Qwen multimodal note post
         run: cp -- "notes/qwen/qwen-multimodal.md" "_posts/2026-10-02-qwen-multimodal-models.md"
 
+      - name: Prepare diffusion note post
+        run: cp -- "notes/Diffusion/diffusion.md" "_posts/2026-10-18-diffusion.md"
+
       - name: Build site
         run: bundle exec jekyll b -d "_site${{ steps.pages.outputs.base_path }}"
         env:
