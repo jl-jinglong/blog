@@ -180,24 +180,26 @@
     "note": "GRPO\uff08token \u7ea7\u6bd4\u7387\uff09\u4e0e GSPO\uff08\u5e8f\u5217\u7ea7\u6bd4\u7387\uff09\u7684\u5bf9\u6bd4\u3002"
   },
   {
-    "asset": "rl2-cover.webp",
-    "origin": "cover built for the part-2 article by padding dpo-rlhf-vs-dpo.webp onto a 1059x661 white canvas",
-    "derived_from": "dpo-rlhf-vs-dpo.webp",
+    "asset": "rl-cover.webp",
+    "derived_from": "grpo-ppo-vs-grpo.webp",
+    "source": "https://arxiv.org/pdf/2402.03300",
+    "figure": 4,
     "pixels": [
       1059,
       661
     ],
-    "note": "Used only as the post card / social preview image (hidden inside the article)."
+    "note": "Card cover for part 1: the GRPO paper's PPO-vs-GRPO flow figure, padded to 1059x661."
   },
   {
-    "asset": "rl-cover.webp",
-    "origin": "built for the part-1 article by tools/rl-cover.py",
+    "asset": "rl2-cover.webp",
+    "derived_from": "grpo-ppo-vs-grpo.webp",
+    "source": "https://arxiv.org/pdf/2402.03300",
+    "figure": 4,
     "pixels": [
       1059,
       661
     ],
-    "note": "Card cover for part 1: the PPO pipeline diagram padded to 1059x661. Chosen over the PPO-vs-GRPO figure because part 1 does not cover GRPO.",
-    "derived_from": "ppo-pipeline.webp"
+    "note": "Card cover for part 2: same PPO-vs-GRPO flow figure, padded to 1059x661."
   },
   {
     "asset": "rl-cover-alt.webp",
@@ -206,6 +208,6 @@
       1059,
       661
     ],
-    "note": "Unused alternative cover: a designed three-stage concept chain (tools/rl-cover.py). Type is too small to read at card size."
+    "note": "Unused alternative cover (designed concept chain); kept for reference."
   }
 ]

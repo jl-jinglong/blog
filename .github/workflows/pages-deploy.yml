@@ -66,10 +66,8 @@ jobs:
       - name: "Prepare RL note post (part 1: policy gradient and PPO)"
         run: cp -- "notes/强化学习/强化学习（一）.md" "_posts/2026-10-12-llm-rl-ppo.md"
 
-      # Part 2 is still a draft. Re-enable this step once it is ready to publish;
-      # part 1 refers to it by title only (no link), so nothing 404s meanwhile.
-      # - name: "Prepare RL note post (part 2: DPO, GRPO, DAPO, GSPO)"
-      #   run: cp -- "notes/强化学习/强化学习（二）.md" "_posts/2026-10-13-llm-rl-dpo-grpo-dapo-gspo.md"
+      - name: "Prepare RL note post (part 2: DPO, GRPO, DAPO, GSPO)"
+        run: cp -- "notes/强化学习/强化学习（二）.md" "_posts/2026-10-13-llm-rl-dpo-grpo-dapo-gspo.md"
 
       - name: Build site
         run: bundle exec jekyll b -d "_site${{ steps.pages.outputs.base_path }}"
